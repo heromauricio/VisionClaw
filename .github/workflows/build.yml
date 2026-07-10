@@ -1,0 +1,43 @@
+name: Cloud-Build VisionClaw IPA
+
+on:
+  workflow_dispatch: # Allows you to trigger the build manually with a single click
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Inject Gemini API Key
+        run: |
+          cd samples/CameraAccess
+          cp CameraAccess/Secrets.swift.example CameraAccess/Secrets.swift
+          sed -i '' 's/YOUR_PASTED_API_KEY_HERE/${{ secrets.GEMINI_API_KEY }}/g' CameraAccess/Secrets.swift
+
+      - name: Compile & Archive App (Unsigned)
+        run: |
+          cd samples/CameraAccess
+          xcodebuild archive \
+            -project CameraAccess.xcodeproj \
+            -scheme CameraAccess \
+            -configuration Release \
+            -archivePath build/CameraAccess.xcarchive \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_IDENTITY=""
+
+      - name: Bundle into IPA Framework
+        run: |
+          cd samples/CameraAccess
+          mkdir -p build/Payload
+          cp -r build/CameraAccess.xcarchive/Products/Applications/CameraAccess.app build/Payload/
+          cd build
+          zip -r VisionClaw.ipa Payload
+
+      - name: Upload Finished App Installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: VisionClaw-Installer
+          path: samples/CameraAccess/build/VisionClaw.ipa
