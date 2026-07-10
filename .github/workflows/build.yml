@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: macos-15  # Forces GitHub to use a modern machine with Xcode 16+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -16,35 +16,35 @@ jobs:
           cp CameraAccess/Secrets.swift.example CameraAccess/Secrets.swift
           sed -i '' "s/static let geminiApiKey = .*/static let geminiApiKey = \"${{ secrets.GEMINI_API_KEY }}\"/g" CameraAccess/Secrets.swift
 
-      - name: Pre-Resolve Swift Packages
-        run: |
-          cd samples/CameraAccess
-          xcodebuild -resolvePackageDependencies -project CameraAccess.xcodeproj
+          - name: Pre-Resolve Swift Packages
+            run: |
+              cd samples/CameraAccess
+              xcodebuild -resolvePackageDependencies -project CameraAccess.xcodeproj
 
-      - name: Compile & Archive App (Unsigned)
-        run: |
-          cd samples/CameraAccess
-          xcodebuild archive \
-            -project CameraAccess.xcodeproj \
-            -scheme CameraAccess \
-            -destination 'generic/platform=iOS' \
-            -archivePath build/CameraAccess.xcarchive \
-            -derivedDataPath build/DerivedData \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_IDENTITY="" \
-            AD_HOC_CODE_SIGNING_ALLOWED=YES
+          - name: Compile & Archive App (Unsigned)
+            run: |
+              cd samples/CameraAccess
+              xcodebuild archive \
+                -project CameraAccess.xcodeproj \
+                -scheme CameraAccess \
+                -destination 'generic/platform=iOS' \
+                -archivePath build/CameraAccess.xcarchive \
+                -derivedDataPath build/DerivedData \
+                CODE_SIGNING_ALLOWED=NO \
+                CODE_SIGNING_REQUIRED=NO \
+                CODE_SIGNING_IDENTITY="" \
+                AD_HOC_CODE_SIGNING_ALLOWED=YES
 
-      - name: Bundle into IPA Framework
-        run: |
-          cd samples/CameraAccess
-          mkdir -p build/Payload
-          cp -r build/CameraAccess.xcarchive/Products/Applications/CameraAccess.app build/Payload/
-          cd build
-          zip -r VisionClaw.ipa Payload
+          - name: Bundle into IPA Framework
+            run: |
+              cd samples/CameraAccess
+              mkdir -p build/Payload
+              cp -r build/CameraAccess.xcarchive/Products/Applications/CameraAccess.app build/Payload/
+              cd build
+              zip -r VisionClaw.ipa Payload
 
-      - name: Upload Finished App Installer
-        uses: actions/upload-artifact@v4
-        with:
-          name: VisionClaw-Installer
-          path: samples/CameraAccess/build/VisionClaw.ipa
+          - name: Upload Finished App Installer
+            uses: actions/upload-artifact@v4
+            with:
+              name: VisionClaw-Installer
+              path: samples/CameraAccess/build/VisionClaw.ipa
