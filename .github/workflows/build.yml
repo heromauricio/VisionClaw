@@ -10,11 +10,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Inject Gemini API Key
+      - name: Inject Gemini API Key & Fix Typo
         run: |
           cd samples/CameraAccess
+          # Inject API Key
           cp CameraAccess/Secrets.swift.example CameraAccess/Secrets.swift
           sed -i '' "s/static let geminiApiKey = .*/static let geminiApiKey = \"${{ secrets.GEMINI_API_KEY }}\"/g" CameraAccess/Secrets.swift
+          
+          # Fix the developer's audio framework typo
+          sed -i '' 's/\.allowBluetoothHFP/\.allowBluetooth/g' CameraAccess/Gemini/AudioManager.swift
 
       - name: Pre-Resolve Swift Packages
         run: |
